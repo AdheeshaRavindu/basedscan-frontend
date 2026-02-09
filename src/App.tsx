@@ -63,7 +63,7 @@ function buildRisks(tx: any) {
         );
     }
 
-    if (tx.to && tx.to !== tx.from && tx.to.length === 42) {
+    if (tx.to && tx.to !== tx.from) {
         risks.push(
             "⚠️ The recipient may be a smart contract. Interacting with contracts can carry additional risk."
         );
@@ -119,7 +119,7 @@ function App() {
             <h1>BasedScan</h1>
             <p>Blockchain transactions, explained simply.</p>
 
-            {/* Search Input */}
+            {/* Search */}
             <input
                 style={{ width: "100%", padding: 10, fontSize: 16 }}
                 placeholder="Paste transaction hash"
@@ -141,14 +141,12 @@ function App() {
             </button>
 
             {/* Error */}
-            {error && (
-                <p style={{ color: "red", marginTop: 16 }}>{error}</p>
-            )}
+            {error && <p style={{ color: "red", marginTop: 16 }}>{error}</p>}
 
             {/* Result */}
             {data && (
                 <>
-                    {/* Human-readable summary */}
+                    {/* Summary */}
                     <div
                         style={{
                             marginTop: 24,
@@ -162,7 +160,7 @@ function App() {
                         {buildSummary(data)}
                     </div>
 
-                    {/* Risk warnings */}
+                    {/* Risk checks */}
                     {risks.length > 0 && (
                         <div
                             style={{
@@ -184,20 +182,29 @@ function App() {
                         </div>
                     )}
 
-                    {/* Raw JSON (technical details) */}
-                    <pre
+                    {/* Technical details (collapsible) */}
+                    <details
                         style={{
                             marginTop: 16,
+                            padding: 12,
+                            borderRadius: 8,
                             background: "#111",
                             color: "#0f0",
-                            padding: 16,
-                            borderRadius: 8,
-                            fontSize: 14,
-                            overflowX: "auto",
                         }}
                     >
-                        {JSON.stringify(data, null, 2)}
-                    </pre>
+                        <summary style={{ cursor: "pointer", fontWeight: "bold" }}>
+                            Technical details
+                        </summary>
+                        <pre
+                            style={{
+                                marginTop: 12,
+                                fontSize: 14,
+                                overflowX: "auto",
+                            }}
+                        >
+                            {JSON.stringify(data, null, 2)}
+                        </pre>
+                    </details>
                 </>
             )}
         </div>
