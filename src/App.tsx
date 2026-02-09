@@ -36,14 +36,62 @@ function buildSummary(tx: any) {
     const when = timeAgo(tx.timestamp);
 
     if (tx.status === "success") {
-        return `✅ Transaction successful. Sent ${amount} ETH from ${from} to ${to}. Confirmed ${when}.`;
+        return (
+            <div>
+                <div style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12, color: "#059669" }}>
+                    ✅ Transaction successful
+                </div>
+                <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 12 }}>
+                    {amount} ETH sent
+                </div>
+                <div style={{ marginBottom: 4 }}>
+                    <strong>From:</strong> {from}
+                </div>
+                <div style={{ marginBottom: 4 }}>
+                    <strong>To:</strong> {to}
+                </div>
+                <div style={{ fontSize: 14, color: "#666", marginTop: 12 }}>
+                    Confirmed {when}
+                </div>
+            </div>
+        );
     }
 
     if (tx.status === "failed") {
-        return `❌ Transaction failed. Attempted to send ${amount} ETH from ${from} to ${to}.`;
+        return (
+            <div>
+                <div style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12, color: "#dc2626" }}>
+                    ❌ Transaction failed
+                </div>
+                <div style={{ marginBottom: 4 }}>
+                    Attempted to send {amount} ETH
+                </div>
+                <div style={{ marginBottom: 4 }}>
+                    <strong>From:</strong> {from}
+                </div>
+                <div style={{ marginBottom: 4 }}>
+                    <strong>To:</strong> {to}
+                </div>
+            </div>
+        );
     }
 
-    return `⏳ Transaction pending. Attempting to send ${amount} ETH from ${from} to ${to}.`;
+    return (
+        <div>
+            <div style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12, color: "#f59e0b" }}>
+                ⏳ Transaction pending
+            </div>
+            <div style={{ marginBottom: 4 }}>
+                Attempting to send {amount} ETH
+            </div>
+            <div style={{ marginBottom: 4 }}>
+                <strong>From:</strong> {from}
+            </div>
+            <div style={{ marginBottom: 4 }}>
+                <strong>To:</strong> {to}
+            </div>
+        </div>
+    );
 }
 
 function buildRisks(tx: any) {
