@@ -1,57 +1,25 @@
-import { useState, useEffect } from 'react';
-
-interface HealthResponse {
-    status: string;
-}
+import { useEffect, useState } from "react";
 
 function App() {
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [healthData, setHealthData] = useState<HealthResponse | null>(null);
+    const [status, setStatus] = useState("loading");
 
     useEffect(() => {
-        const fetchHealth = async () => {
-            try {
-                const response = await fetch('https://basedscan-api.adheesharavindu001.workers.dev/health');
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data: HealthResponse = await response.json();
-                setHealthData(data);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch backend status');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchHealth();
+        fetch("https://basedscan-api.adheesharavindu001.workers.dev/health")
+            .then((res) => res.json())
+            .then(() => setStatus("connected"))
+            .catch(() => setStatus("error"));
     }, []);
 
     return (
-        <div>
+        <div style={{ padding: 40 }}>
             <h1>BasedScan</h1>
-            <p>Blockchain transactions, explained simply</p>
+            <p>Blockchain transactions, explained simply.</p>
 
-            <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}>
-                <h2>Backend Status</h2>
+            <hr />
 
-                {loading && <p>Loading backend status...</p>}
-
-                {error && (
-                    <p style={{ color: 'red' }}>
-                        Error: {error}
-                    </p>
-                )}
-
-                {healthData && (
-                    <p style={{ color: 'green' }}>
-                        Status: {healthData.status}
-                    </p>
-                )}
-            </div>
+            {status === "loading" && <p>Connecting to backend…</p>}
+            {status === "connected" && <p style={{ color: "green" }}>Backend connected ✅</p>}
+            {status === "error" && <p style={{ color: "red" }}>Backend not reachable ❌</p>}
         </div>
     );
 }
