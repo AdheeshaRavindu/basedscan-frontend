@@ -10,7 +10,7 @@ function shortAddress(addr: string) {
 }
 
 function timeAgo(timestamp: number | null) {
-    if (!timestamp) return "Time unknown";
+    if (!timestamp) return "time unknown";
 
     const now = Date.now();
     const then = timestamp * 1000;
@@ -30,8 +30,6 @@ function timeAgo(timestamp: number | null) {
 }
 
 function buildSummary(tx: any) {
-    if (!tx) return "";
-
     const amount = tx.valueEth;
     const from = shortAddress(tx.from);
     const to = shortAddress(tx.to);
@@ -42,10 +40,36 @@ function buildSummary(tx: any) {
     }
 
     if (tx.status === "failed") {
-        return `❌ Transaction failed. Attempted to send ${amount} ETH from ${from} to ${to}. ${when}.`;
+        return `❌ Transaction failed. Attempted to send ${amount} ETH from ${from} to ${to}.`;
     }
 
     return `⏳ Transaction pending. Attempting to send ${amount} ETH from ${from} to ${to}.`;
+}
+
+function buildRisks(tx: any) {
+    const risks: string[] = [];
+
+    if (tx.status === "failed") {
+        risks.push("❌ This transaction failed. No funds were transferred.");
+    }
+
+    if (tx.status === "pending") {
+        risks.push("⏳ This transaction is still pending and may fail or be replaced.");
+    }
+
+    if (tx.valueEth === "0.000000") {
+        risks.push(
+            "⚠️ Zero ETH transferred. This is often a contract interaction (approvals, swaps, mints)."
+        );
+    }
+
+    if (tx.to && tx.to !== tx.from && tx.to.length === 42) {
+        risks.push(
+            "⚠️ The recipient may be a smart contract. Interacting with contracts can carry additional risk."
+        );
+    }
+
+    return risks;
 }
 
 /* -----------------------------
@@ -82,6 +106,8 @@ function App() {
         }
     };
 
+    const risks = data ? buildRisks(data) : [];
+
     return (
         <div
             style={{
@@ -95,11 +121,7 @@ function App() {
 
             {/* Search Input */}
             <input
-                style={{
-                    width: "100%",
-                    padding: 10,
-                    fontSize: 16,
-                }}
+                style={{ width: "100%", padding: 10, fontSize: 16 }}
                 placeholder="Paste transaction hash"
                 value={hash}
                 onChange={(e) => setHash(e.target.value)}
@@ -120,9 +142,7 @@ function App() {
 
             {/* Error */}
             {error && (
-                <p style={{ color: "red", marginTop: 16 }}>
-                    {error}
-                </p>
+                <p style={{ color: "red", marginTop: 16 }}>{error}</p>
             )}
 
             {/* Result */}
@@ -141,6 +161,28 @@ function App() {
                     >
                         {buildSummary(data)}
                     </div>
+
+                    {/* Risk warnings */}
+                    {risks.length > 0 && (
+                        <div
+                            style={{
+                                marginTop: 16,
+                                padding: 16,
+                                borderRadius: 8,
+                                background: "#fff4e5",
+                                border: "1px solid #ffd591",
+                            }}
+                        >
+                            <strong>Risk checks</strong>
+                            <ul style={{ marginTop: 8 }}>
+                                {risks.map((risk, idx) => (
+                                    <li key={idx} style={{ marginBottom: 6 }}>
+                                        {risk}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
                     {/* Raw JSON (technical details) */}
                     <pre
