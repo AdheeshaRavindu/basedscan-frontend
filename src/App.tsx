@@ -9,19 +9,40 @@ function shortAddress(addr: string) {
     return addr.slice(0, 6) + "…" + addr.slice(-4);
 }
 
+function timeAgo(timestamp: number | null) {
+    if (!timestamp) return "Time unknown";
+
+    const now = Date.now();
+    const then = timestamp * 1000;
+    const diff = Math.floor((now - then) / 1000);
+
+    if (diff < 10) return "just now";
+    if (diff < 60) return `${diff} seconds ago`;
+
+    const minutes = Math.floor(diff / 60);
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+
+    const days = Math.floor(hours / 24);
+    return `${days} day${days > 1 ? "s" : ""} ago`;
+}
+
 function buildSummary(tx: any) {
     if (!tx) return "";
 
     const amount = tx.valueEth;
     const from = shortAddress(tx.from);
     const to = shortAddress(tx.to);
+    const when = timeAgo(tx.timestamp);
 
     if (tx.status === "success") {
-        return `✅ Transaction successful. Sent ${amount} ETH from ${from} to ${to}.`;
+        return `✅ Transaction successful. Sent ${amount} ETH from ${from} to ${to}. Confirmed ${when}.`;
     }
 
     if (tx.status === "failed") {
-        return `❌ Transaction failed. Attempted to send ${amount} ETH from ${from} to ${to}.`;
+        return `❌ Transaction failed. Attempted to send ${amount} ETH from ${from} to ${to}. ${when}.`;
     }
 
     return `⏳ Transaction pending. Attempting to send ${amount} ETH from ${from} to ${to}.`;
