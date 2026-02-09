@@ -1,25 +1,70 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 function App() {
-    const [status, setStatus] = useState("loading");
+    const [hash, setHash] = useState("");
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        fetch("https://basedscan-api.adheesharavindu001.workers.dev/health")
-            .then((res) => res.json())
-            .then(() => setStatus("connected"))
-            .catch(() => setStatus("error"));
-    }, []);
+    const lookupTx = async () => {
+        setLoading(true);
+        setError(null);
+        setData(null);
+
+        try {
+            const res = await fetch(
+                `https://basedscan-api.adheesharavindu001.workers.dev/tx/${hash}`
+            );
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || "Transaction not found");
+            }
+
+            const json = await res.json();
+            setData(json);
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <div style={{ padding: 40 }}>
+        <div style={{ padding: 40, fontFamily: "sans-serif", maxWidth: 800 }}>
             <h1>BasedScan</h1>
             <p>Blockchain transactions, explained simply.</p>
 
-            <hr />
+            <input
+                style={{ width: "100%", padding: 8 }}
+                placeholder="Paste transaction hash"
+                value={hash}
+                onChange={(e) => setHash(e.target.value)}
+            />
 
-            {status === "loading" && <p>Connecting to backend…</p>}
-            {status === "connected" && <p style={{ color: "green" }}>Backend connected ✅</p>}
-            {status === "error" && <p style={{ color: "red" }}>Backend not reachable ❌</p>}
+            <button
+                style={{ marginTop: 12, padding: "8px 16px" }}
+                onClick={lookupTx}
+                disabled={!hash || loading}
+            >
+                {loading ? "Loading…" : "Search"}
+            </button>
+
+            {error && <p style={{ color: "red" }}>{error}</p>}
+
+            {data && (
+                <pre
+                    style={{
+                        marginTop: 20,
+                        background: "#111",
+                        color: "#0f0",
+                        padding: 16,
+                        borderRadius: 8,
+                    }}
+                >
+                    {JSON.stringify(data, null, 2)}
+                </pre>
+            )}
         </div>
     );
 }
