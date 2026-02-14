@@ -208,6 +208,30 @@ function App() {
                         {buildSummary(data)}
                     </div>
 
+                    {/* Network Fee */}
+                    {data.gasFeeEth && (
+                        <div
+                            style={{
+                                marginTop: 16,
+                                padding: 16,
+                                borderRadius: 8,
+                                background: "#f5f5f5",
+                                fontSize: 16,
+                                lineHeight: 1.5,
+                            }}
+                        >
+                            <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8 }}>
+                                Network Fee
+                            </div>
+                            <div style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}>
+                                {data.gasFeeEth} ETH
+                            </div>
+                            <div style={{ fontSize: 14, color: "#666" }}>
+                                This is the amount paid to the network to process this transaction.
+                            </div>
+                        </div>
+                    )}
+
                     {/* Risk checks */}
                     {risks.length > 0 && (
                         <div
