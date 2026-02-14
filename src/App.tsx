@@ -208,8 +208,9 @@ function App() {
                         {buildSummary(data)}
                     </div>
 
+
                     {/* Network Fee */}
-                    {data.gasFeeEth && (
+                    {data.gasFeeEth !== null && (
                         <div
                             style={{
                                 marginTop: 16,
@@ -223,9 +224,14 @@ function App() {
                             <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8 }}>
                                 Network Fee
                             </div>
-                            <div style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}>
+                            <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 8 }}>
                                 {data.gasFeeEth} ETH
                             </div>
+                            {data.gasUsed && (
+                                <div style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>
+                                    Gas used: {data.gasUsed.toLocaleString()}
+                                </div>
+                            )}
                             <div style={{ fontSize: 14, color: "#666" }}>
                                 This is the amount paid to the network to process this transaction.
                             </div>
