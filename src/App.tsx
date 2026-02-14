@@ -35,6 +35,15 @@ function buildSummary(tx: any) {
     const to = shortAddress(tx.to);
     const when = timeAgo(tx.timestamp);
 
+    // Calculate USD value
+    const getUsdValue = (ethValue: string) => {
+        if (!tx.ethPriceUsd || !ethValue) return null;
+        const usd = parseFloat(ethValue) * tx.ethPriceUsd;
+        return usd.toFixed(2);
+    };
+
+    const usdValue = getUsdValue(amount);
+
     if (tx.status === "success") {
         return (
             <div>
@@ -42,7 +51,7 @@ function buildSummary(tx: any) {
                     ✅ Transaction successful
                 </div>
                 <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 12 }}>
-                    {amount} ETH sent
+                    {amount} ETH sent{usdValue && <span style={{ color: "#666", fontWeight: "normal" }}> (${usdValue})</span>}
                 </div>
                 <div style={{ marginBottom: 4 }}>
                     <strong>From:</strong> {from}
@@ -97,6 +106,7 @@ function buildSummary(tx: any) {
 function buildRisks(tx: any) {
     const risks: string[] = [];
 
+    // Status-based risks
     if (tx.status === "failed") {
         risks.push("❌ This transaction failed. No funds were transferred.");
     }
@@ -105,16 +115,21 @@ function buildRisks(tx: any) {
         risks.push("⏳ This transaction is still pending and may fail or be replaced.");
     }
 
+    // Zero value warning
     if (tx.valueEth === "0.000000") {
         risks.push(
             "⚠️ Zero ETH transferred. This is often a contract interaction (approvals, swaps, mints)."
         );
     }
 
-    if (tx.to && tx.to !== tx.from) {
-        risks.push(
-            "⚠️ The recipient may be a smart contract. Interacting with contracts can carry additional risk."
-        );
+    // Add backend-provided risks
+    if (tx.risks && Array.isArray(tx.risks)) {
+        tx.risks.forEach((risk: string) => {
+            const icon = risk.includes("deployment") ? "🔨" :
+                risk.includes("Self") ? "🔄" :
+                    risk.includes("High gas") ? "⚠️" : "⚠️";
+            risks.push(`${icon} ${risk}`);
+        });
     }
 
     return risks;
@@ -226,6 +241,10 @@ function App() {
                             </div>
                             <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 8 }}>
                                 {data.gasFeeEth} ETH
+                                {data.ethPriceUsd && (() => {
+                                    const usd = (parseFloat(data.gasFeeEth) * data.ethPriceUsd).toFixed(2);
+                                    return <span style={{ color: "#666", fontWeight: "normal" }}> (${usd})</span>;
+                                })()}
                             </div>
                             {data.gasUsed && (
                                 <div style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>
@@ -239,17 +258,17 @@ function App() {
                     )}
 
                     {/* Risk checks */}
-                    {risks.length > 0 && (
-                        <div
-                            style={{
-                                marginTop: 16,
-                                padding: 16,
-                                borderRadius: 8,
-                                background: "#fff4e5",
-                                border: "1px solid #ffd591",
-                            }}
-                        >
-                            <strong>Risk checks</strong>
+                    <div
+                        style={{
+                            marginTop: 16,
+                            padding: 16,
+                            borderRadius: 8,
+                            background: risks.length > 0 ? "#fff4e5" : "#e8f5e9",
+                            border: risks.length > 0 ? "1px solid #ffd591" : "1px solid #a5d6a7",
+                        }}
+                    >
+                        <strong>{risks.length > 0 ? "Risk checks" : "✓ Security"}</strong>
+                        {risks.length > 0 ? (
                             <ul style={{ marginTop: 8 }}>
                                 {risks.map((risk, idx) => (
                                     <li key={idx} style={{ marginBottom: 6 }}>
@@ -257,8 +276,12 @@ function App() {
                                     </li>
                                 ))}
                             </ul>
-                        </div>
-                    )}
+                        ) : (
+                            <div style={{ marginTop: 8, color: "#2e7d32" }}>
+                                No known risks detected
+                            </div>
+                        )}
+                    </div>
 
                     {/* Technical details (collapsible) */}
                     <details
