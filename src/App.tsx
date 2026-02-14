@@ -40,8 +40,15 @@ function buildSummary(tx: any) {
                 <div style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12, color: "#059669" }}>
                     ✅ Transaction successful
                 </div>
-                <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 12 }}>
-                    {tx.value} sent
+                <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 2 }}>
+                        {tx.valueEth || "0"} ETH
+                    </div>
+                    {tx.valueUsd && (
+                        <div style={{ fontSize: 16, color: "#666" }}>
+                            ${tx.valueUsd}
+                        </div>
+                    )}
                 </div>
                 <div style={{ marginBottom: 4 }}>
                     <strong>From:</strong> {from}
@@ -63,7 +70,7 @@ function buildSummary(tx: any) {
                     ❌ Transaction failed
                 </div>
                 <div style={{ marginBottom: 4 }}>
-                    Attempted to send {tx.value}
+                    Attempted to send {tx.valueEth || "0"} ETH{tx.valueUsd && ` ($${tx.valueUsd})`}
                 </div>
                 <div style={{ marginBottom: 4 }}>
                     <strong>From:</strong> {from}
@@ -81,7 +88,7 @@ function buildSummary(tx: any) {
                 ⏳ Transaction pending
             </div>
             <div style={{ marginBottom: 4 }}>
-                Attempting to send {tx.value}
+                Attempting to send {tx.valueEth || "0"} ETH{tx.valueUsd && ` ($${tx.valueUsd})`}
             </div>
             <div style={{ marginBottom: 4 }}>
                 <strong>From:</strong> {from}
@@ -106,7 +113,7 @@ function buildRisks(tx: any) {
     }
 
     // Zero value warning
-    if (tx.value && tx.value.startsWith("0.000000")) {
+    if (tx.valueEth === "0.000000") {
         risks.push(
             "⚠️ Zero ETH transferred. This is often a contract interaction (approvals, swaps, mints)."
         );
@@ -132,26 +139,45 @@ function buildRisks(tx: any) {
 function App() {
     const [hash, setHash] = useState("");
     const [data, setData] = useState<any>(null);
+    const [dataType, setDataType] = useState<"tx" | "address" | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const lookupTx = async () => {
+    const lookup = async () => {
         setLoading(true);
         setError(null);
         setData(null);
+        setDataType(null);
 
         try {
-            const res = await fetch(
-                `https://basedscan-api.adheesharavindu001.workers.dev/tx/${hash}`
-            );
+            // Detect if input is address (40 hex chars) or tx hash (64 hex chars)
+            const cleanInput = hash.trim().toLowerCase();
+            const isAddress = /^(0x)?[a-f0-9]{40}$/i.test(cleanInput);
+            const isTxHash = /^(0x)?[a-f0-9]{64}$/i.test(cleanInput);
+
+            let endpoint = "";
+            let type: "tx" | "address" | null = null;
+
+            if (isTxHash) {
+                endpoint = `https://basedscan-api.adheesharavindu001.workers.dev/tx/${cleanInput}`;
+                type = "tx";
+            } else if (isAddress) {
+                endpoint = `https://basedscan-api.adheesharavindu001.workers.dev/address/${cleanInput}`;
+                type = "address";
+            } else {
+                throw new Error("Invalid input. Please enter a valid transaction hash or address.");
+            }
+
+            const res = await fetch(endpoint);
 
             if (!res.ok) {
                 const err = await res.json();
-                throw new Error(err.error || "Transaction not found");
+                throw new Error(err.error || "Not found");
             }
 
             const json = await res.json();
             setData(json);
+            setDataType(type);
         } catch (e: any) {
             setError(e.message);
         } finally {
@@ -175,7 +201,7 @@ function App() {
             {/* Search */}
             <input
                 style={{ width: "100%", padding: 10, fontSize: 16 }}
-                placeholder="Paste transaction hash"
+                placeholder="Paste transaction hash or address"
                 value={hash}
                 onChange={(e) => setHash(e.target.value)}
             />
@@ -187,7 +213,7 @@ function App() {
                     fontSize: 16,
                     cursor: "pointer",
                 }}
-                onClick={lookupTx}
+                onClick={lookup}
                 disabled={!hash || loading}
             >
                 {loading ? "Loading…" : "Search"}
@@ -197,7 +223,7 @@ function App() {
             {error && <p style={{ color: "red", marginTop: 16 }}>{error}</p>}
 
             {/* Result */}
-            {data && (
+            {dataType === "tx" && data && (
                 <>
                     {/* Summary */}
                     <div
@@ -215,7 +241,7 @@ function App() {
 
 
                     {/* Network Fee */}
-                    {data.gasFee && (
+                    {data.gasFeeEth && (
                         <div
                             style={{
                                 marginTop: 16,
@@ -229,8 +255,15 @@ function App() {
                             <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8 }}>
                                 Network Fee
                             </div>
-                            <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 8 }}>
-                                {data.gasFee}
+                            <div style={{ marginBottom: 8 }}>
+                                <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 2 }}>
+                                    {data.gasFeeEth} ETH
+                                </div>
+                                {data.gasFeeUsd && (
+                                    <div style={{ fontSize: 16, color: "#666" }}>
+                                        ${data.gasFeeUsd}
+                                    </div>
+                                )}
                             </div>
                             {data.gasUsed && (
                                 <div style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>
@@ -292,6 +325,82 @@ function App() {
                             {JSON.stringify(data, null, 2)}
                         </pre>
                     </details>
+                </>
+            )}
+
+
+            {/* Address Result */}
+            {dataType === "address" && data && (
+                <>
+                    {/* ETH Balance */}
+                    <div
+                        style={{
+                            marginTop: 24,
+                            padding: 16,
+                            borderRadius: 8,
+                            background: "#f5f5f5",
+                            fontSize: 16,
+                            lineHeight: 1.5,
+                        }}
+                    >
+                        <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8, color: "#666" }}>
+                            ETH Balance
+                        </div>
+                        <div style={{ fontSize: 24, fontWeight: "bold", marginBottom: 8 }}>
+                            {data.balanceEth} ETH
+                        </div>
+                        {data.type && (
+                            <div style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
+                                Type: {data.type}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Assets */}
+                    <div
+                        style={{
+                            marginTop: 16,
+                            padding: 16,
+                            borderRadius: 8,
+                            background: "#f5f5f5",
+                        }}
+                    >
+                        <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 12 }}>
+                            Verified Assets
+                        </div>
+                        {data.assets && data.assets.length > 0 ? (
+                            <div>
+                                {data.assets.map((asset: any, idx: number) => (
+                                    <div
+                                        key={idx}
+                                        style={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                            padding: "12px 0",
+                                            borderBottom: idx < data.assets.length - 1 ? "1px solid #ddd" : "none",
+                                        }}
+                                    >
+                                        <div>
+                                            <div style={{ fontWeight: "bold", fontSize: 16 }}>
+                                                {asset.symbol}
+                                            </div>
+                                            <div style={{ fontSize: 13, color: "#666" }}>
+                                                {asset.name}
+                                            </div>
+                                        </div>
+                                        <div style={{ fontWeight: "bold", fontSize: 16 }}>
+                                            {asset.balance}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ color: "#666", fontSize: 14 }}>
+                                No verified tokens found.
+                            </div>
+                        )}
+                    </div>
                 </>
             )}
         </div>
