@@ -331,77 +331,28 @@ function App() {
 
             {/* Address Result */}
             {dataType === "address" && data && (
-                <>
-                    {/* ETH Balance */}
-                    <div
-                        style={{
-                            marginTop: 24,
-                            padding: 16,
-                            borderRadius: 8,
-                            background: "#f5f5f5",
-                            fontSize: 16,
-                            lineHeight: 1.5,
-                        }}
-                    >
-                        <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8, color: "#666" }}>
-                            ETH Balance
-                        </div>
-                        <div style={{ fontSize: 24, fontWeight: "bold", marginBottom: 8 }}>
-                            {data.balanceEth} ETH
-                        </div>
-                        {data.type && (
-                            <div style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
-                                Type: {data.type}
-                            </div>
-                        )}
+                <div
+                    style={{
+                        marginTop: 24,
+                        padding: 16,
+                        borderRadius: 8,
+                        background: "#f5f5f5",
+                        fontSize: 16,
+                        lineHeight: 1.5,
+                    }}
+                >
+                    <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8, color: "#666" }}>
+                        ETH Balance
                     </div>
-
-                    {/* Assets */}
-                    <div
-                        style={{
-                            marginTop: 16,
-                            padding: 16,
-                            borderRadius: 8,
-                            background: "#f5f5f5",
-                        }}
-                    >
-                        <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 12 }}>
-                            Verified Assets
-                        </div>
-                        {data.assets && data.assets.length > 0 ? (
-                            <div>
-                                {data.assets.map((asset: any, idx: number) => (
-                                    <div
-                                        key={idx}
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                            padding: "12px 0",
-                                            borderBottom: idx < data.assets.length - 1 ? "1px solid #ddd" : "none",
-                                        }}
-                                    >
-                                        <div>
-                                            <div style={{ fontWeight: "bold", fontSize: 16 }}>
-                                                {asset.symbol}
-                                            </div>
-                                            <div style={{ fontSize: 13, color: "#666" }}>
-                                                {asset.name}
-                                            </div>
-                                        </div>
-                                        <div style={{ fontWeight: "bold", fontSize: 16 }}>
-                                            {asset.balance}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div style={{ color: "#666", fontSize: 14 }}>
-                                No verified tokens found.
-                            </div>
-                        )}
+                    <div style={{ fontSize: 24, fontWeight: "bold", marginBottom: 8 }}>
+                        {data.balanceEth} ETH
                     </div>
-                </>
+                    {data.type && (
+                        <div style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
+                            Type: {data.type}
+                        </div>
+                    )}
+                </div>
             )}
         </div>
     );
