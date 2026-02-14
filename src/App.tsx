@@ -30,19 +30,9 @@ function timeAgo(timestamp: number | null) {
 }
 
 function buildSummary(tx: any) {
-    const amount = tx.valueEth;
     const from = shortAddress(tx.from);
     const to = shortAddress(tx.to);
     const when = timeAgo(tx.timestamp);
-
-    // Calculate USD value
-    const getUsdValue = (ethValue: string) => {
-        if (!tx.ethPriceUsd || !ethValue) return null;
-        const usd = parseFloat(ethValue) * tx.ethPriceUsd;
-        return usd.toFixed(2);
-    };
-
-    const usdValue = getUsdValue(amount);
 
     if (tx.status === "success") {
         return (
@@ -51,7 +41,7 @@ function buildSummary(tx: any) {
                     ✅ Transaction successful
                 </div>
                 <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 12 }}>
-                    {amount} ETH sent{usdValue && <span style={{ color: "#666", fontWeight: "normal" }}> (${usdValue})</span>}
+                    {tx.value} sent
                 </div>
                 <div style={{ marginBottom: 4 }}>
                     <strong>From:</strong> {from}
@@ -73,7 +63,7 @@ function buildSummary(tx: any) {
                     ❌ Transaction failed
                 </div>
                 <div style={{ marginBottom: 4 }}>
-                    Attempted to send {amount} ETH
+                    Attempted to send {tx.value}
                 </div>
                 <div style={{ marginBottom: 4 }}>
                     <strong>From:</strong> {from}
@@ -91,7 +81,7 @@ function buildSummary(tx: any) {
                 ⏳ Transaction pending
             </div>
             <div style={{ marginBottom: 4 }}>
-                Attempting to send {amount} ETH
+                Attempting to send {tx.value}
             </div>
             <div style={{ marginBottom: 4 }}>
                 <strong>From:</strong> {from}
@@ -116,7 +106,7 @@ function buildRisks(tx: any) {
     }
 
     // Zero value warning
-    if (tx.valueEth === "0.000000") {
+    if (tx.value && tx.value.startsWith("0.000000")) {
         risks.push(
             "⚠️ Zero ETH transferred. This is often a contract interaction (approvals, swaps, mints)."
         );
@@ -225,7 +215,7 @@ function App() {
 
 
                     {/* Network Fee */}
-                    {data.gasFeeEth !== null && (
+                    {data.gasFee && (
                         <div
                             style={{
                                 marginTop: 16,
@@ -240,11 +230,7 @@ function App() {
                                 Network Fee
                             </div>
                             <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 8 }}>
-                                {data.gasFeeEth} ETH
-                                {data.ethPriceUsd && (() => {
-                                    const usd = (parseFloat(data.gasFeeEth) * data.ethPriceUsd).toFixed(2);
-                                    return <span style={{ color: "#666", fontWeight: "normal" }}> (${usd})</span>;
-                                })()}
+                                {data.gasFee}
                             </div>
                             {data.gasUsed && (
                                 <div style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>
