@@ -580,7 +580,6 @@ See [LICENSE](LICENSE) for full text.
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/AdheeshaRavindu/basedscan-frontend/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/AdheeshaRavindu/basedscan-frontend/discussions)
 
 ---
 

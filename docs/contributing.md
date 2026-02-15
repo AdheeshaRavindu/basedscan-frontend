@@ -712,7 +712,6 @@ npx vite-bundle-visualizer
 ### Communication Channels
 
 - **GitHub Issues:** Bug reports and feature requests
-- **GitHub Discussions:** General questions and ideas
 - **Pull Requests:** Code contributions
 
 ### Getting Help
