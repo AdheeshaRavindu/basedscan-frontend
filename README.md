@@ -4,6 +4,10 @@
 
 BasedScan is a minimal, production-ready blockchain explorer that decodes Ethereum transactions on Base Mainnet, providing clear summaries, gas fee calculations, and risk detection—without the complexity of traditional block explorers.
 
+## 🚀 Live Demo
+
+**Try it now:** [https://basedscan-frontend.pages.dev/](https://basedscan-frontend.pages.dev/)
+
 ---
 
 ## Table of Contents

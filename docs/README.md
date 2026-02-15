@@ -2,6 +2,10 @@
 
 This directory contains comprehensive technical documentation for the BasedScan project.
 
+**🌐 Live Demo:** [https://basedscan-frontend.pages.dev/](https://basedscan-frontend.pages.dev/)
+
+---
+
 ## 📚 Documentation Files
 
 ### [architecture.md](./architecture.md)
