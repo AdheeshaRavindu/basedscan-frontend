@@ -161,13 +161,6 @@ function formatTransferValue(value: number | string) {
     return fixed.replace(/\.?0+$/, "");
 }
 
-function buildTokenLine(token: any) {
-    const symbol = token.symbol || "Token";
-    const name = token.name || "";
-    const label = name ? `${symbol} - ${name}` : symbol;
-    return `${token.balance || "0"} ${label}`;
-}
-
 /* -----------------------------
    App Component
 ------------------------------ */
