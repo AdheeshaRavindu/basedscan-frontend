@@ -141,13 +141,24 @@ function buildTransferLine(transfer: any) {
         const tokenId = transfer.tokenId ? ` #${transfer.tokenId}` : "";
         amountLabel = `${assetLabel}${tokenId}`;
     } else if (transfer.value !== null && transfer.value !== undefined) {
-        amountLabel = `${transfer.value} ${assetLabel}`;
+        const valueLabel = formatTransferValue(transfer.value);
+        amountLabel = `${valueLabel} ${assetLabel}`;
     } else {
         amountLabel = assetLabel;
     }
 
     const when = transfer.timestamp ? timeAgo(transfer.timestamp) : "time unknown";
     return `${direction} ${amountLabel} ${direction === "Sent" ? "to" : "from"} ${counterpartyLabel} • ${when}`;
+}
+
+function formatTransferValue(value: number | string) {
+    if (typeof value === "string") return value;
+    if (!Number.isFinite(value)) return String(value);
+
+    const absValue = Math.abs(value);
+    const fractionDigits = absValue > 0 && absValue < 0.000001 ? 12 : 6;
+    const fixed = value.toFixed(fractionDigits);
+    return fixed.replace(/\.?0+$/, "");
 }
 
 function buildTokenLine(token: any) {
