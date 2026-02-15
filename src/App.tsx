@@ -130,6 +130,33 @@ function buildRisks(tx: any) {
     return risks;
 }
 
+function buildTransferLine(transfer: any) {
+    const direction = transfer.direction === "out" ? "Sent" : "Received";
+    const counterparty = transfer.direction === "out" ? transfer.to : transfer.from;
+    const counterpartyLabel = counterparty ? shortAddress(counterparty) : "unknown";
+    const assetLabel = transfer.asset || "ETH";
+
+    let amountLabel = "";
+    if (transfer.category === "erc721" || transfer.category === "erc1155") {
+        const tokenId = transfer.tokenId ? ` #${transfer.tokenId}` : "";
+        amountLabel = `${assetLabel}${tokenId}`;
+    } else if (transfer.value !== null && transfer.value !== undefined) {
+        amountLabel = `${transfer.value} ${assetLabel}`;
+    } else {
+        amountLabel = assetLabel;
+    }
+
+    const when = transfer.timestamp ? timeAgo(transfer.timestamp) : "time unknown";
+    return `${direction} ${amountLabel} ${direction === "Sent" ? "to" : "from"} ${counterpartyLabel} • ${when}`;
+}
+
+function buildTokenLine(token: any) {
+    const symbol = token.symbol || "Token";
+    const name = token.name || "";
+    const label = name ? `${symbol} - ${name}` : symbol;
+    return `${token.balance || "0"} ${label}`;
+}
+
 /* -----------------------------
    App Component
 ------------------------------ */
@@ -471,11 +498,50 @@ function App() {
                     <div style={{ fontSize: 24, fontWeight: "bold", marginBottom: 8 }}>
                         {data.balanceEth} ETH
                     </div>
-                    {data.type && (
-                        <div style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
-                            Type: {data.type}
+                    {data.balanceUsd && (
+                        <div style={{ fontSize: 16, color: "#666", marginBottom: 8 }}>
+                            ≈ ${data.balanceUsd}
                         </div>
                     )}
+                    {data.balanceWei && (
+                        <div style={{ fontSize: 12, color: "#888" }}>
+                            {data.balanceWei} wei
+                        </div>
+                    )}
+                    {data.type && (
+                        <div style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
+                            Type: {data.type === "contract" ? "Contract" : "Wallet"}
+                            {data.codeBytes !== null && data.codeBytes !== undefined && (
+                                <span> • Bytecode: {data.codeBytes} bytes</span>
+                            )}
+                        </div>
+                    )}
+                    {data.fetchedAt && (
+                        <div style={{ fontSize: 12, color: "#888", marginTop: 6 }}>
+                            Updated {timeAgo(data.fetchedAt)}
+                        </div>
+                    )}
+
+                    <div style={{ marginTop: 16 }}>
+                        <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8, color: "#666" }}>
+                            Recent activity
+                        </div>
+                        {Array.isArray(data.recentTransfers) && data.recentTransfers.length > 0 ? (
+                            <ul style={{ margin: 0, paddingLeft: 18 }}>
+                                {data.recentTransfers.map((transfer: any, idx: number) => (
+                                    <li key={transfer.uniqueId || idx} style={{ marginBottom: 6 }}>
+                                        {buildTransferLine(transfer)}
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <div style={{ fontSize: 13, color: "#888" }}>
+                                No recent activity found.
+                            </div>
+                        )}
+                    </div>
+
+
                 </div>
             )}
 
