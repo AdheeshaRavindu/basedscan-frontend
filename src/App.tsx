@@ -130,27 +130,6 @@ function buildRisks(tx: any) {
     return risks;
 }
 
-function buildTransferLine(transfer: any) {
-    const direction = transfer.direction === "out" ? "Sent" : "Received";
-    const counterparty = transfer.direction === "out" ? transfer.to : transfer.from;
-    const counterpartyLabel = counterparty ? shortAddress(counterparty) : "unknown";
-    const assetLabel = transfer.asset || "ETH";
-
-    let amountLabel = "";
-    if (transfer.category === "erc721" || transfer.category === "erc1155") {
-        const tokenId = transfer.tokenId ? ` #${transfer.tokenId}` : "";
-        amountLabel = `${assetLabel}${tokenId}`;
-    } else if (transfer.value !== null && transfer.value !== undefined) {
-        const valueLabel = formatTransferValue(transfer.value);
-        amountLabel = `${valueLabel} ${assetLabel}`;
-    } else {
-        amountLabel = assetLabel;
-    }
-
-    const when = transfer.timestamp ? timeAgo(transfer.timestamp) : "time unknown";
-    return `${direction} ${amountLabel} ${direction === "Sent" ? "to" : "from"} ${counterpartyLabel} • ${when}`;
-}
-
 function formatTransferValue(value: number | string) {
     if (typeof value === "string") return value;
     if (!Number.isFinite(value)) return String(value);
@@ -175,7 +154,11 @@ function App() {
     const [showFullTo, setShowFullTo] = useState(false);
     const [copiedFrom, setCopiedFrom] = useState(false);
     const [copiedTo, setCopiedTo] = useState(false);
-    const copyTimersRef = useRef<{ from?: number; to?: number }>({});
+    const [expandedRecent, setExpandedRecent] = useState<Record<string, boolean>>({});
+    const [copiedRecent, setCopiedRecent] = useState<Record<string, boolean>>({});
+    const copyTimersRef = useRef<{ from?: number; to?: number; recent?: Record<string, number> }>({
+        recent: {}
+    });
 
     const lookup = async () => {
         setLoading(true);
@@ -186,12 +169,20 @@ function App() {
         setShowFullTo(false);
         setCopiedFrom(false);
         setCopiedTo(false);
+        setExpandedRecent({});
+        setCopiedRecent({});
 
         if (copyTimersRef.current.from) {
             window.clearTimeout(copyTimersRef.current.from);
         }
         if (copyTimersRef.current.to) {
             window.clearTimeout(copyTimersRef.current.to);
+        }
+        if (copyTimersRef.current.recent) {
+            Object.values(copyTimersRef.current.recent).forEach((timerId) => {
+                window.clearTimeout(timerId);
+            });
+            copyTimersRef.current.recent = {};
         }
 
         try {
@@ -276,6 +267,24 @@ function App() {
                 setCopiedTo(false);
             }, 1500);
         }
+    };
+
+    const handleRecentAddressClick = async (key: string, address: string) => {
+        setExpandedRecent((prev) => ({ ...prev, [key]: !prev[key] }));
+        await copyToClipboard(address);
+        setCopiedRecent((prev) => ({ ...prev, [key]: true }));
+
+        if (!copyTimersRef.current.recent) {
+            copyTimersRef.current.recent = {};
+        }
+
+        if (copyTimersRef.current.recent[key]) {
+            window.clearTimeout(copyTimersRef.current.recent[key]);
+        }
+
+        copyTimersRef.current.recent[key] = window.setTimeout(() => {
+            setCopiedRecent((prev) => ({ ...prev, [key]: false }));
+        }, 1500);
     };
 
     const fromLabel = data?.from
@@ -532,11 +541,63 @@ function App() {
                         </div>
                         {Array.isArray(data.recentTransfers) && data.recentTransfers.length > 0 ? (
                             <ul style={{ margin: 0, paddingLeft: 18 }}>
-                                {data.recentTransfers.map((transfer: any, idx: number) => (
-                                    <li key={transfer.uniqueId || idx} style={{ marginBottom: 6 }}>
-                                        {buildTransferLine(transfer)}
-                                    </li>
-                                ))}
+                                {data.recentTransfers.map((transfer: any, idx: number) => {
+                                    const key = String(transfer.uniqueId || idx);
+                                    const direction = transfer.direction === "out" ? "Sent" : "Received";
+                                    const counterparty = transfer.direction === "out" ? transfer.to : transfer.from;
+                                    const counterpartyLabel = counterparty
+                                        ? (expandedRecent[key] ? counterparty : shortAddress(counterparty))
+                                        : "unknown";
+                                    const assetLabel = transfer.asset || "ETH";
+
+                                    let amountLabel = "";
+                                    if (transfer.category === "erc721" || transfer.category === "erc1155") {
+                                        const tokenId = transfer.tokenId ? ` #${transfer.tokenId}` : "";
+                                        amountLabel = `${assetLabel}${tokenId}`;
+                                    } else if (transfer.value !== null && transfer.value !== undefined) {
+                                        const valueLabel = formatTransferValue(transfer.value);
+                                        amountLabel = `${valueLabel} ${assetLabel}`;
+                                    } else {
+                                        amountLabel = assetLabel;
+                                    }
+
+                                    const when = transfer.timestamp ? timeAgo(transfer.timestamp) : "time unknown";
+                                    const actionWord = direction === "Sent" ? "to" : "from";
+
+                                    return (
+                                        <li key={key} style={{ marginBottom: 6 }}>
+                                            {direction} {amountLabel} {actionWord}{" "}
+                                            {counterparty ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRecentAddressClick(key, counterparty)}
+                                                    style={{
+                                                        background: "none",
+                                                        border: "none",
+                                                        padding: 0,
+                                                        color: "#2563eb",
+                                                        cursor: "pointer",
+                                                        font: "inherit",
+                                                    }}
+                                                    aria-label="Toggle full address"
+                                                    title={expandedRecent[key]
+                                                        ? "Click to collapse and copy"
+                                                        : "Click to expand and copy"}
+                                                >
+                                                    {counterpartyLabel}
+                                                    {copiedRecent[key] && (
+                                                        <span style={{ marginLeft: 8, fontSize: 12, color: "#16a34a" }}>
+                                                            Copied!
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            ) : (
+                                                <span>{counterpartyLabel}</span>
+                                            )}
+                                            {" "}• {when}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         ) : (
                             <div style={{ fontSize: 13, color: "#888" }}>
