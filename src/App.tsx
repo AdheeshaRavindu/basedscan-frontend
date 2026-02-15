@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 /* -----------------------------
    Helper functions
@@ -29,9 +29,7 @@ function timeAgo(timestamp: number | null) {
     return `${days} day${days > 1 ? "s" : ""} ago`;
 }
 
-function buildSummary(tx: any) {
-    const from = shortAddress(tx.from);
-    const to = shortAddress(tx.to);
+function buildSummary(tx: any, fromNode: ReactNode, toNode: ReactNode) {
     const when = timeAgo(tx.timestamp);
 
     if (tx.status === "success") {
@@ -51,10 +49,10 @@ function buildSummary(tx: any) {
                     )}
                 </div>
                 <div style={{ marginBottom: 4 }}>
-                    <strong>From:</strong> {from}
+                    <strong>From:</strong> {fromNode}
                 </div>
                 <div style={{ marginBottom: 4 }}>
-                    <strong>To:</strong> {to}
+                    <strong>To:</strong> {toNode}
                 </div>
                 <div style={{ fontSize: 14, color: "#666", marginTop: 12 }}>
                     Confirmed {when}
@@ -73,10 +71,10 @@ function buildSummary(tx: any) {
                     Attempted to send {tx.valueEth || "0"} ETH{tx.valueUsd && ` ($${tx.valueUsd})`}
                 </div>
                 <div style={{ marginBottom: 4 }}>
-                    <strong>From:</strong> {from}
+                    <strong>From:</strong> {fromNode}
                 </div>
                 <div style={{ marginBottom: 4 }}>
-                    <strong>To:</strong> {to}
+                    <strong>To:</strong> {toNode}
                 </div>
             </div>
         );
@@ -91,10 +89,10 @@ function buildSummary(tx: any) {
                 Attempting to send {tx.valueEth || "0"} ETH{tx.valueUsd && ` ($${tx.valueUsd})`}
             </div>
             <div style={{ marginBottom: 4 }}>
-                <strong>From:</strong> {from}
+                <strong>From:</strong> {fromNode}
             </div>
             <div style={{ marginBottom: 4 }}>
-                <strong>To:</strong> {to}
+                <strong>To:</strong> {toNode}
             </div>
         </div>
     );
@@ -142,12 +140,28 @@ function App() {
     const [dataType, setDataType] = useState<"tx" | "address" | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showFullFrom, setShowFullFrom] = useState(false);
+    const [showFullTo, setShowFullTo] = useState(false);
+    const [copiedFrom, setCopiedFrom] = useState(false);
+    const [copiedTo, setCopiedTo] = useState(false);
+    const copyTimersRef = useRef<{ from?: number; to?: number }>({});
 
     const lookup = async () => {
         setLoading(true);
         setError(null);
         setData(null);
         setDataType(null);
+        setShowFullFrom(false);
+        setShowFullTo(false);
+        setCopiedFrom(false);
+        setCopiedTo(false);
+
+        if (copyTimersRef.current.from) {
+            window.clearTimeout(copyTimersRef.current.from);
+        }
+        if (copyTimersRef.current.to) {
+            window.clearTimeout(copyTimersRef.current.to);
+        }
 
         try {
             // Detect if input is address (40 hex chars) or tx hash (64 hex chars)
@@ -186,6 +200,111 @@ function App() {
     };
 
     const risks = data ? buildRisks(data) : [];
+
+    const copyToClipboard = async (value: string) => {
+        if (!value) return;
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(value);
+            return;
+        }
+
+        const textarea = document.createElement("textarea");
+        textarea.value = value;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+    };
+
+    const handleFromClick = async () => {
+        setShowFullFrom((prev) => !prev);
+        if (data?.from) {
+            await copyToClipboard(data.from);
+            setCopiedFrom(true);
+            if (copyTimersRef.current.from) {
+                window.clearTimeout(copyTimersRef.current.from);
+            }
+            copyTimersRef.current.from = window.setTimeout(() => {
+                setCopiedFrom(false);
+            }, 1500);
+        }
+    };
+
+    const handleToClick = async () => {
+        setShowFullTo((prev) => !prev);
+        if (data?.to) {
+            await copyToClipboard(data.to);
+            setCopiedTo(true);
+            if (copyTimersRef.current.to) {
+                window.clearTimeout(copyTimersRef.current.to);
+            }
+            copyTimersRef.current.to = window.setTimeout(() => {
+                setCopiedTo(false);
+            }, 1500);
+        }
+    };
+
+    const fromLabel = data?.from
+        ? (showFullFrom ? data.from : shortAddress(data.from))
+        : "";
+    const toLabel = data?.to
+        ? (showFullTo ? data.to : shortAddress(data.to))
+        : "contract deployment";
+
+    const fromNode = data?.from ? (
+        <button
+            type="button"
+            onClick={handleFromClick}
+            style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                color: "#2563eb",
+                cursor: "pointer",
+                font: "inherit",
+            }}
+            aria-label="Toggle full from address"
+            title={showFullFrom ? "Click to collapse and copy" : "Click to expand and copy"}
+        >
+            {fromLabel}
+            {copiedFrom && (
+                <span style={{ marginLeft: 8, fontSize: 12, color: "#16a34a" }}>
+                    Copied!
+                </span>
+            )}
+        </button>
+    ) : (
+        <span>{fromLabel}</span>
+    );
+
+    const toNode = data?.to ? (
+        <button
+            type="button"
+            onClick={handleToClick}
+            style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                color: "#2563eb",
+                cursor: "pointer",
+                font: "inherit",
+            }}
+            aria-label="Toggle full to address"
+            title={showFullTo ? "Click to collapse and copy" : "Click to expand and copy"}
+        >
+            {toLabel}
+            {copiedTo && (
+                <span style={{ marginLeft: 8, fontSize: 12, color: "#16a34a" }}>
+                    Copied!
+                </span>
+            )}
+        </button>
+    ) : (
+        <span>{toLabel}</span>
+    );
 
     return (
         <div
@@ -241,7 +360,7 @@ function App() {
                             lineHeight: 1.5,
                         }}
                     >
-                        {buildSummary(data)}
+                        {buildSummary(data, fromNode, toNode)}
                     </div>
 
 
