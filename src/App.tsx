@@ -204,6 +204,11 @@ function App() {
                 placeholder="Paste transaction hash or address"
                 value={hash}
                 onChange={(e) => setHash(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" && hash && !loading) {
+                        lookup();
+                    }
+                }}
             />
 
             <button
@@ -354,6 +359,20 @@ function App() {
                     )}
                 </div>
             )}
+
+            {/* Footer */}
+            <div
+                style={{
+                    marginTop: 60,
+                    paddingTop: 20,
+                    borderTop: "1px solid #e0e0e0",
+                    textAlign: "center",
+                    fontSize: 14,
+                    color: "#666",
+                }}
+            >
+                Made with ❤️ by Adheesha
+            </div>
         </div>
     );
 }
