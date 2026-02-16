@@ -42,11 +42,7 @@ function buildSummary(tx: any, fromNode: ReactNode, toNode: ReactNode) {
                     <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 2 }}>
                         {tx.valueEth || "0"} ETH
                     </div>
-                    {tx.valueUsd && (
-                        <div style={{ fontSize: 16, color: "#666" }}>
-                            ${tx.valueUsd}
-                        </div>
-                    )}
+                    
                 </div>
                 <div style={{ marginBottom: 4 }}>
                     <strong>From:</strong> {fromNode}
@@ -68,7 +64,7 @@ function buildSummary(tx: any, fromNode: ReactNode, toNode: ReactNode) {
                     ❌ Transaction failed
                 </div>
                 <div style={{ marginBottom: 4 }}>
-                    Attempted to send {tx.valueEth || "0"} ETH{tx.valueUsd && ` ($${tx.valueUsd})`}
+                    Attempted to send {tx.valueEth || "0"} ETH
                 </div>
                 <div style={{ marginBottom: 4 }}>
                     <strong>From:</strong> {fromNode}
@@ -86,7 +82,7 @@ function buildSummary(tx: any, fromNode: ReactNode, toNode: ReactNode) {
                 ⏳ Transaction pending
             </div>
             <div style={{ marginBottom: 4 }}>
-                Attempting to send {tx.valueEth || "0"} ETH{tx.valueUsd && ` ($${tx.valueUsd})`}
+                Attempting to send {tx.valueEth || "0"} ETH
             </div>
             <div style={{ marginBottom: 4 }}>
                 <strong>From:</strong> {fromNode}
@@ -423,11 +419,7 @@ function App() {
                                 <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 2 }}>
                                     {data.gasFeeEth} ETH
                                 </div>
-                                {data.gasFeeUsd && (
-                                    <div style={{ fontSize: 16, color: "#666" }}>
-                                        ${data.gasFeeUsd}
-                                    </div>
-                                )}
+                                
                             </div>
                             {data.gasUsed && (
                                 <div style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>
