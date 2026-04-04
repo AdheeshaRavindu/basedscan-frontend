@@ -1,4 +1,5 @@
 import { useRef, useState, type ReactNode } from "react";
+import "./App.css";
 
 /* -----------------------------
    Helper functions
@@ -6,7 +7,7 @@ import { useRef, useState, type ReactNode } from "react";
 
 function shortAddress(addr: string) {
     if (!addr) return "";
-    return addr.slice(0, 6) + "…" + addr.slice(-4);
+    return addr.slice(0, 6) + "..." + addr.slice(-4);
 }
 
 function timeAgo(timestamp: number | null) {
@@ -34,62 +35,33 @@ function buildSummary(tx: any, fromNode: ReactNode, toNode: ReactNode) {
 
     if (tx.status === "success") {
         return (
-            <div>
-                <div style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12, color: "#059669" }}>
-                    ✅ Transaction successful
-                </div>
-                <div style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 2 }}>
-                        {tx.valueEth || "0"} ETH
-                    </div>
-                    
-                </div>
-                <div style={{ marginBottom: 4 }}>
-                    <strong>From:</strong> {fromNode}
-                </div>
-                <div style={{ marginBottom: 4 }}>
-                    <strong>To:</strong> {toNode}
-                </div>
-                <div style={{ fontSize: 14, color: "#666", marginTop: 12 }}>
-                    Confirmed {when}
-                </div>
+            <div className="summary-body">
+                <div className="summary-status success">Transaction successful</div>
+                <div className="summary-value">{tx.valueEth || "0"} ETH</div>
+                <div className="detail-row"><strong>From:</strong> {fromNode}</div>
+                <div className="detail-row"><strong>To:</strong> {toNode}</div>
+                <div className="summary-time">Confirmed {when}</div>
             </div>
         );
     }
 
     if (tx.status === "failed") {
         return (
-            <div>
-                <div style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12, color: "#dc2626" }}>
-                    ❌ Transaction failed
-                </div>
-                <div style={{ marginBottom: 4 }}>
-                    Attempted to send {tx.valueEth || "0"} ETH
-                </div>
-                <div style={{ marginBottom: 4 }}>
-                    <strong>From:</strong> {fromNode}
-                </div>
-                <div style={{ marginBottom: 4 }}>
-                    <strong>To:</strong> {toNode}
-                </div>
+            <div className="summary-body">
+                <div className="summary-status failed">Transaction failed</div>
+                <div className="detail-row">Attempted to send {tx.valueEth || "0"} ETH</div>
+                <div className="detail-row"><strong>From:</strong> {fromNode}</div>
+                <div className="detail-row"><strong>To:</strong> {toNode}</div>
             </div>
         );
     }
 
     return (
-        <div>
-            <div style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12, color: "#f59e0b" }}>
-                ⏳ Transaction pending
-            </div>
-            <div style={{ marginBottom: 4 }}>
-                Attempting to send {tx.valueEth || "0"} ETH
-            </div>
-            <div style={{ marginBottom: 4 }}>
-                <strong>From:</strong> {fromNode}
-            </div>
-            <div style={{ marginBottom: 4 }}>
-                <strong>To:</strong> {toNode}
-            </div>
+        <div className="summary-body">
+            <div className="summary-status pending">Transaction pending</div>
+            <div className="detail-row">Attempting to send {tx.valueEth || "0"} ETH</div>
+            <div className="detail-row"><strong>From:</strong> {fromNode}</div>
+            <div className="detail-row"><strong>To:</strong> {toNode}</div>
         </div>
     );
 }
@@ -99,27 +71,24 @@ function buildRisks(tx: any) {
 
     // Status-based risks
     if (tx.status === "failed") {
-        risks.push("❌ This transaction failed. No funds were transferred.");
+        risks.push("This transaction failed. No funds were transferred.");
     }
 
     if (tx.status === "pending") {
-        risks.push("⏳ This transaction is still pending and may fail or be replaced.");
+        risks.push("This transaction is still pending and may fail or be replaced.");
     }
 
     // Zero value warning
     if (tx.valueEth === "0.000000") {
         risks.push(
-            "⚠️ Zero ETH transferred. This is often a contract interaction (approvals, swaps, mints)."
+            "Zero ETH transferred. This is often a contract interaction (approvals, swaps, mints)."
         );
     }
 
     // Add backend-provided risks
     if (tx.risks && Array.isArray(tx.risks)) {
         tx.risks.forEach((risk: string) => {
-            const icon = risk.includes("deployment") ? "🔨" :
-                risk.includes("Self") ? "🔄" :
-                    risk.includes("High gas") ? "⚠️" : "⚠️";
-            risks.push(`${icon} ${risk}`);
+            risks.push(risk);
         });
     }
 
@@ -294,20 +263,13 @@ function App() {
         <button
             type="button"
             onClick={handleFromClick}
-            style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                color: "#2563eb",
-                cursor: "pointer",
-                font: "inherit",
-            }}
+            className="address-toggle"
             aria-label="Toggle full from address"
             title={showFullFrom ? "Click to collapse and copy" : "Click to expand and copy"}
         >
             {fromLabel}
             {copiedFrom && (
-                <span style={{ marginLeft: 8, fontSize: 12, color: "#16a34a" }}>
+                <span className="copied-tag">
                     Copied!
                 </span>
             )}
@@ -320,20 +282,13 @@ function App() {
         <button
             type="button"
             onClick={handleToClick}
-            style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                color: "#2563eb",
-                cursor: "pointer",
-                font: "inherit",
-            }}
+            className="address-toggle"
             aria-label="Toggle full to address"
             title={showFullTo ? "Click to collapse and copy" : "Click to expand and copy"}
         >
             {toLabel}
             {copiedTo && (
-                <span style={{ marginLeft: 8, fontSize: 12, color: "#16a34a" }}>
+                <span className="copied-tag">
                     Copied!
                 </span>
             )}
@@ -342,197 +297,137 @@ function App() {
         <span>{toLabel}</span>
     );
 
+    const onSearch = () => {
+        if (hash && !loading) {
+            lookup();
+        }
+    };
+
     return (
-        <div
-            style={{
-                padding: 40,
-                fontFamily: "sans-serif",
-                maxWidth: 800,
-            }}
-        >
-            <h1>BasedScan</h1>
-            <p>Blockchain transactions, explained simply.</p>
+        <div className="app-shell">
+            <div className="ambient-shape ambient-a" aria-hidden="true" />
+            <div className="ambient-shape ambient-b" aria-hidden="true" />
 
-            {/* Search */}
-            <input
-                style={{ width: "100%", padding: 10, fontSize: 16 }}
-                placeholder="Paste transaction hash or address"
-                value={hash}
-                onChange={(e) => setHash(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter" && hash && !loading) {
-                        lookup();
-                    }
-                }}
-            />
+            <header className="hero">
+                <div className="hero-anchor">
+                    <h1>BasedScan</h1>
+                    <p className="hero-subtitle">
+                        Explore transactions and addresses on Base with a scanner built for fast reading and clear risk visibility.
+                    </p>
+                </div>
+            </header>
 
-            <button
-                style={{
-                    marginTop: 12,
-                    padding: "10px 18px",
-                    fontSize: 16,
-                    cursor: "pointer",
-                }}
-                onClick={lookup}
-                disabled={!hash || loading}
-            >
-                {loading ? "Loading…" : "Search"}
-            </button>
+            <section className="lookup-zone" aria-label="Search panel">
+                <label className="input-label" htmlFor="lookup-input">
+                    Transaction hash or address
+                </label>
+                <div className="lookup-controls">
+                    <input
+                        id="lookup-input"
+                        className="lookup-input"
+                        placeholder="Paste 0x transaction hash or wallet address"
+                        value={hash}
+                        onChange={(e) => setHash(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                onSearch();
+                            }
+                        }}
+                    />
+                    <button
+                        className="search-button"
+                        onClick={onSearch}
+                        disabled={!hash || loading}
+                    >
+                        {loading ? "Loading..." : "Search"}
+                    </button>
+                </div>
+                {error && <p className="error-text">{error}</p>}
+            </section>
 
-            {/* Error */}
-            {error && <p style={{ color: "red", marginTop: 16 }}>{error}</p>}
+            <section className="base-facts" aria-label="About Base network">
+                <h2>About Base Network</h2>
+                <p className="base-facts-lead">
+                    Base is an Ethereum Layer 2 built on the OP Stack. It was announced in February 2023 and publicly launched in August 2023.
+                </p>
+                <div className="base-facts-grid">
+                    <article className="fact-card">
+                        <h3>Foundation</h3>
+                        <p>Incubated by Coinbase and designed to make onchain apps cheaper and faster than Ethereum mainnet.</p>
+                    </article>
+                    <article className="fact-card">
+                        <h3>How it works</h3>
+                        <p>As a rollup, Base batches transactions and settles to Ethereum for security.</p>
+                    </article>
+                    <article className="fact-card">
+                        <h3>Why use it</h3>
+                        <p>Lower fees, faster confirmations, and EVM compatibility for wallets, DeFi, NFTs, and social apps.</p>
+                    </article>
+                </div>
+            </section>
 
-            {/* Result */}
+            <main className="results-layout">
             {dataType === "tx" && data && (
                 <>
-                    {/* Summary */}
-                    <div
-                        style={{
-                            marginTop: 24,
-                            padding: 16,
-                            borderRadius: 8,
-                            background: "#f5f5f5",
-                            fontSize: 16,
-                            lineHeight: 1.5,
-                        }}
-                    >
+                    <section className="panel panel-primary">
+                        <h2>Transaction Summary</h2>
                         {buildSummary(data, fromNode, toNode)}
-                    </div>
+                    </section>
 
-
-                    {/* Network Fee */}
                     {data.gasFeeEth && (
-                        <div
-                            style={{
-                                marginTop: 16,
-                                padding: 16,
-                                borderRadius: 8,
-                                background: "#f5f5f5",
-                                fontSize: 16,
-                                lineHeight: 1.5,
-                            }}
-                        >
-                            <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8 }}>
-                                Network Fee
-                            </div>
-                            <div style={{ marginBottom: 8 }}>
-                                <div style={{ fontSize: 20, fontWeight: "bold", marginBottom: 2 }}>
-                                    {data.gasFeeEth} ETH
-                                </div>
-                                
-                            </div>
+                        <section className="panel">
+                            <h2>Network Fee</h2>
+                            <div className="summary-value fee">{data.gasFeeEth} ETH</div>
                             {data.gasUsed && (
-                                <div style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>
-                                    Gas used: {data.gasUsed.toLocaleString()}
-                                </div>
+                                <p className="muted-text">Gas used: {data.gasUsed.toLocaleString()}</p>
                             )}
-                            <div style={{ fontSize: 14, color: "#666" }}>
+                            <p className="muted-text">
                                 This is the amount paid to the network to process this transaction.
-                            </div>
-                        </div>
+                            </p>
+                        </section>
                     )}
 
-                    {/* Risk checks */}
-                    <div
-                        style={{
-                            marginTop: 16,
-                            padding: 16,
-                            borderRadius: 8,
-                            background: risks.length > 0 ? "#fff4e5" : "#e8f5e9",
-                            border: risks.length > 0 ? "1px solid #ffd591" : "1px solid #a5d6a7",
-                        }}
-                    >
-                        <strong>{risks.length > 0 ? "Risk checks" : "✓ Security"}</strong>
+                    <section className={`panel ${risks.length > 0 ? "risk-panel" : "safe-panel"}`}>
+                        <h2>{risks.length > 0 ? "Risk Checks" : "Security"}</h2>
                         {risks.length > 0 ? (
-                            <ul style={{ marginTop: 8 }}>
+                            <ul className="risk-list">
                                 {risks.map((risk, idx) => (
-                                    <li key={idx} style={{ marginBottom: 6 }}>
-                                        {risk}
-                                    </li>
+                                    <li key={idx}>{risk}</li>
                                 ))}
                             </ul>
                         ) : (
-                            <div style={{ marginTop: 8, color: "#2e7d32" }}>
-                                No known risks detected
-                            </div>
+                            <p className="safe-text">No known risks detected.</p>
                         )}
-                    </div>
+                    </section>
 
-                    {/* Technical details (collapsible) */}
-                    <details
-                        style={{
-                            marginTop: 16,
-                            padding: 12,
-                            borderRadius: 8,
-                            background: "#111",
-                            color: "#0f0",
-                        }}
-                    >
-                        <summary style={{ cursor: "pointer", fontWeight: "bold" }}>
-                            Technical details
-                        </summary>
-                        <pre
-                            style={{
-                                marginTop: 12,
-                                fontSize: 14,
-                                overflowX: "auto",
-                            }}
-                        >
-                            {JSON.stringify(data, null, 2)}
-                        </pre>
+                    <details className="panel technical-panel">
+                        <summary>Technical details</summary>
+                        <pre>{JSON.stringify(data, null, 2)}</pre>
                     </details>
                 </>
             )}
 
-
-            {/* Address Result */}
             {dataType === "address" && data && (
-                <div
-                    style={{
-                        marginTop: 24,
-                        padding: 16,
-                        borderRadius: 8,
-                        background: "#f5f5f5",
-                        fontSize: 16,
-                        lineHeight: 1.5,
-                    }}
-                >
-                    <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8, color: "#666" }}>
-                        ETH Balance
-                    </div>
-                    <div style={{ fontSize: 24, fontWeight: "bold", marginBottom: 8 }}>
-                        {data.balanceEth} ETH
-                    </div>
-                    {data.balanceUsd && (
-                        <div style={{ fontSize: 16, color: "#666", marginBottom: 8 }}>
-                            ≈ ${data.balanceUsd}
-                        </div>
-                    )}
-                    {data.balanceWei && (
-                        <div style={{ fontSize: 12, color: "#888" }}>
-                            {data.balanceWei} wei
-                        </div>
-                    )}
+                <section className="panel panel-primary">
+                    <h2>Address Summary</h2>
+                    <p className="label">ETH Balance</p>
+                    <div className="summary-value">{data.balanceEth} ETH</div>
+                    {data.balanceUsd && <p className="muted-text">~ ${data.balanceUsd}</p>}
+                    {data.balanceWei && <p className="meta-row">{data.balanceWei} wei</p>}
                     {data.type && (
-                        <div style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
+                        <p className="meta-row">
                             Type: {data.type === "contract" ? "Contract" : "Wallet"}
                             {data.codeBytes !== null && data.codeBytes !== undefined && (
-                                <span> • Bytecode: {data.codeBytes} bytes</span>
+                                <span> | Bytecode: {data.codeBytes} bytes</span>
                             )}
-                        </div>
+                        </p>
                     )}
-                    {data.fetchedAt && (
-                        <div style={{ fontSize: 12, color: "#888", marginTop: 6 }}>
-                            Updated {timeAgo(data.fetchedAt)}
-                        </div>
-                    )}
+                    {data.fetchedAt && <p className="meta-row">Updated {timeAgo(data.fetchedAt)}</p>}
 
-                    <div style={{ marginTop: 16 }}>
-                        <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8, color: "#666" }}>
-                            Recent activity
-                        </div>
+                    <div className="recent-block">
+                        <h3>Recent Activity</h3>
                         {Array.isArray(data.recentTransfers) && data.recentTransfers.length > 0 ? (
-                            <ul style={{ margin: 0, paddingLeft: 18 }}>
+                            <ul className="recent-list">
                                 {data.recentTransfers.map((transfer: any, idx: number) => {
                                     const key = String(transfer.uniqueId || idx);
                                     const direction = transfer.direction === "out" ? "Sent" : "Received";
@@ -557,64 +452,40 @@ function App() {
                                     const actionWord = direction === "Sent" ? "to" : "from";
 
                                     return (
-                                        <li key={key} style={{ marginBottom: 6 }}>
-                                            {direction} {amountLabel} {actionWord}{" "}
+                                        <li key={key}>
+                                            <span className="activity-lead">{direction} {amountLabel} {actionWord}</span>{" "}
                                             {counterparty ? (
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRecentAddressClick(key, counterparty)}
-                                                    style={{
-                                                        background: "none",
-                                                        border: "none",
-                                                        padding: 0,
-                                                        color: "#2563eb",
-                                                        cursor: "pointer",
-                                                        font: "inherit",
-                                                    }}
+                                                    className="address-toggle"
                                                     aria-label="Toggle full address"
                                                     title={expandedRecent[key]
                                                         ? "Click to collapse and copy"
                                                         : "Click to expand and copy"}
                                                 >
                                                     {counterpartyLabel}
-                                                    {copiedRecent[key] && (
-                                                        <span style={{ marginLeft: 8, fontSize: 12, color: "#16a34a" }}>
-                                                            Copied!
-                                                        </span>
-                                                    )}
+                                                    {copiedRecent[key] && <span className="copied-tag">Copied!</span>}
                                                 </button>
                                             ) : (
                                                 <span>{counterpartyLabel}</span>
                                             )}
-                                            {" "}• {when}
+                                            <span className="meta-dot"> | {when}</span>
                                         </li>
                                     );
                                 })}
                             </ul>
                         ) : (
-                            <div style={{ fontSize: 13, color: "#888" }}>
-                                No recent activity found.
-                            </div>
+                            <p className="muted-text">No recent activity found.</p>
                         )}
                     </div>
-
-
-                </div>
+                </section>
             )}
+            </main>
 
-            {/* Footer */}
-            <div
-                style={{
-                    marginTop: 60,
-                    paddingTop: 20,
-                    borderTop: "1px solid #e0e0e0",
-                    textAlign: "center",
-                    fontSize: 14,
-                    color: "#666",
-                }}
-            >
-                Made with ❤️ by Adheesha
-            </div>
+            <footer className="site-footer">
+                <p>Made with &hearts; by Adheesha</p>
+            </footer>
         </div>
     );
 }
