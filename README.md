@@ -8,10 +8,13 @@ BasedScan is a minimal, production-ready blockchain explorer that decodes Ethere
 
 **Try it now:** [https://basedscan-frontend.pages.dev/](https://basedscan-frontend.pages.dev/)
 
+**Full technical documentation:** [docs/full-documentation.md](./docs/full-documentation.md)
+
 ---
 
 ## Table of Contents
 
+- [Screenshots](#screenshots)
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Features](#features)
@@ -24,6 +27,16 @@ BasedScan is a minimal, production-ready blockchain explorer that decodes Ethere
 - [Future Roadmap](#future-roadmap)
 - [Contributing](#contributing)
 - [License](#license)
+
+---
+
+## Screenshots
+
+![BasedScan Screenshot 1](./Screenshot%202026-04-04%20214610.png)
+
+![BasedScan Screenshot 2](./Screenshot%202026-04-04%20214842.png)
+
+![BasedScan Screenshot 3](./Screenshot%202026-04-04%20214909.png)
 
 ---
 

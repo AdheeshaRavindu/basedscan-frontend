@@ -8,6 +8,20 @@ This directory contains comprehensive technical documentation for the BasedScan 
 
 ## 📚 Documentation Files
 
+### [full-documentation.md](./full-documentation.md)
+**Complete Product + Engineering Documentation**
+
+Covers:
+- Product overview and user flows
+- Frontend architecture and runtime behavior
+- API contracts used by the UI
+- Build, deployment, security, and maintenance
+- Known limitations and roadmap suggestions
+
+**Audience:** Maintainers, new contributors, technical reviewers, and project owners
+
+---
+
 ### [architecture.md](./architecture.md)
 **System Architecture & Design**
 
@@ -92,9 +106,9 @@ Covers:
 ## Quick Links
 
 ### For New Contributors
-1. Start with [contributing.md](./contributing.md)
-2. Review [architecture.md](./architecture.md) for system overview
-3. Check [api.md](./api.md) for endpoint details
+1. Start with [full-documentation.md](./full-documentation.md)
+2. Continue with [contributing.md](./contributing.md)
+3. Review [architecture.md](./architecture.md) for deeper infrastructure details
 
 ### For Deploying
 1. Follow [deployment.md](./deployment.md) step-by-step
